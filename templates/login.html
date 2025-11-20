@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Face Authentication</title>
+  <style>
+    body {
+        font-family: Arial, sans-serif;
+        background: linear-gradient(135deg, #000000, #222);
+        color: white;
+        text-align: center;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        margin: 0;
+    }
+
+    button {
+        background-color: #333;
+        color: white;
+        border: none;
+        padding: 15px 25px;
+        margin: 15px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: 0.3s;
+    }
+
+    button:hover {
+        background-color: #555;
+        transform: scale(1.05);
+    }
+
+    #status {
+        margin-top: 20px;
+        font-size: 18px;
+    }
+
+    video {
+        border-radius: 10px;
+        border: 3px solid #888;
+        width: 480px;
+        height: 360px;
+        margin: 20px auto;
+        background: #000;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Face Authentication</h1>
+<video id="video" autoplay></video>
+
+<div>
+  <button onclick="registerFace()">Register Face</button>
+  <button onclick="authenticateFace()">Authenticate Face</button>
+</div>
+
+<div id="status"></div>
+
+<script>
+  let video = document.getElementById('video');
+  let canvas = document.createElement('canvas');
+  const width = 480, height = 360;
+
+  async function startCamera() {
+      try {
+          const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+          video.srcObject = stream;
+      } catch (err) {
+          alert("Camera access denied or not available.");
+      }
+  }
+
+  function captureFrame() {
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, width, height);
+      return canvas.toDataURL('image/jpeg');
+  }
+
+  // Use XMLHttpRequest to send frame as JSON
+  function sendFrame(url) {
+      return new Promise((resolve, reject) => {
+          const imgData = captureFrame();
+
+          const xhr = new XMLHttpRequest();
+          xhr.open('POST', url, true);
+          xhr.setRequestHeader('Content-Type', 'application/json');
+
+          xhr.onreadystatechange = function () {
+              if (xhr.readyState === 4) {
+                  if (xhr.status >= 200 && xhr.status < 300) {
+                      try {
+                          const json = JSON.parse(xhr.responseText);
+                          resolve(json);
+                      } catch (e) {
+                          console.error('Non-JSON response from server:', xhr.responseText);
+                          reject(new Error('Server returned non-JSON: ' + xhr.responseText.slice(0, 200)));
+                      }
+                  } else {
+                      reject(new Error('HTTP error ' + xhr.status));
+                  }
+              }
+          };
+
+          xhr.onerror = function () {
+              reject(new Error('Network error sending frame'));
+          };
+
+          xhr.send(JSON.stringify({ image: imgData }));
+      });
+  }
+
+  async function registerFace() {
+      const statusEl = document.getElementById('status');
+      statusEl.textContent = 'Registering...';
+
+      try {
+          const data = await sendFrame('/register');
+          if (data.status === 'success') {
+              alert('Face registered successfully!');
+          } else {
+              alert('Registration failed: ' + (data.message || 'unknown error'));
+          }
+      } catch (err) {
+          console.error(err);
+          alert('Unexpected error during registration: ' + err.message);
+      }
+
+      statusEl.textContent = '';
+  }
+
+  async function authenticateFace() {
+      const statusEl = document.getElementById('status');
+      statusEl.textContent = 'Authenticating...';
+
+      try {
+          const data = await sendFrame('/authenticate');
+          if (data.status === 'success') {
+              window.location.href = '/dashboard';
+          } else {
+              alert('Authentication failed: ' + (data.message || 'unknown error'));
+          }
+      } catch (err) {
+          console.error(err);
+          alert('Unexpected error during authentication: ' + err.message);
+      }
+
+      statusEl.textContent = '';
+  }
+
+  startCamera();
+</script>
+
+</body>
+</html>

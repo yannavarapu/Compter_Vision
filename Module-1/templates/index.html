@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Real World Dimension Calculator</title>
+  <style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: #1a1a1a;
+        min-height: 100vh;
+        padding: 20px;
+    }
+
+    .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        background: #2d2d2d;
+        border-radius: 15px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        padding: 30px;
+        border: 1px solid #3a3a3a;
+    }
+
+    h1 {
+        text-align: center;
+        color: #ffffff;
+        margin-bottom: 30px;
+        font-size: 2.5em;
+    }
+
+    .main-grid {
+        display: grid;
+        grid-template-columns: 1fr 400px;
+        gap: 30px;
+    }
+
+    .image-section {
+        background: #1a1a1a;
+        border-radius: 10px;
+        padding: 20px;
+        border: 1px solid #3a3a3a;
+    }
+
+    .controls-section {
+        background: #1a1a1a;
+        border-radius: 10px;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        border: 1px solid #3a3a3a;
+    }
+
+    .upload-area {
+        border: 3px dashed #666666;
+        border-radius: 10px;
+        padding: 40px;
+        text-align: center;
+        background: #2d2d2d;
+        cursor: pointer;
+        transition: all 0.3s;
+        margin-bottom: 20px;
+        color: #ffffff;
+    }
+
+    .upload-area:hover {
+        background: #3a3a3a;
+        border-color: #888888;
+    }
+
+    .upload-area h3 {
+        color: #ffffff;
+    }
+
+    .upload-area p {
+        color: #cccccc;
+    }
+
+    .upload-area input {
+        display: none;
+    }
+
+    .canvas-container {
+        position: relative;
+        display: inline-block;
+        background: #000000;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        max-width: 100%;
+        overflow: auto;
+        border: 2px solid #3a3a3a;
+    }
+
+    #imageCanvas {
+        display: block;
+        cursor: crosshair;
+        max-width: 100%;
+    }
+
+    .control-group {
+        background: #2d2d2d;
+        border-radius: 8px;
+        padding: 15px;
+        border: 1px solid #3a3a3a;
+    }
+
+    .control-group h3 {
+        color: #ffffff;
+        margin-bottom: 15px;
+        font-size: 1.1em;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 5px;
+        color: #cccccc;
+        font-weight: 500;
+        font-size: 0.9em;
+    }
+
+    input[type="number"] {
+        width: 100%;
+        padding: 10px;
+        border: 2px solid #3a3a3a;
+        border-radius: 5px;
+        font-size: 1em;
+        margin-bottom: 10px;
+        transition: border-color 0.3s;
+        background: #1a1a1a;
+        color: #ffffff;
+    }
+
+    input[type="number"]:focus {
+        outline: none;
+        border-color: #666666;
+    }
+
+    button {
+        width: 100%;
+        padding: 12px;
+        background: #ffffff;
+        color: #000000;
+        border: none;
+        border-radius: 5px;
+        font-size: 1em;
+        cursor: pointer;
+        transition: all 0.2s;
+        margin-bottom: 10px;
+        font-weight: 600;
+    }
+
+    button:hover {
+        transform: translateY(-2px);
+        background: #e0e0e0;
+    }
+
+    button:disabled {
+        background: #3a3a3a;
+        color: #666666;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .btn-secondary {
+        background: #4a4a4a;
+        color: #ffffff;
+    }
+
+    .btn-secondary:hover {
+        background: #5a5a5a;
+    }
+
+    .results {
+        background: #2d2d2d;
+        border-radius: 8px;
+        padding: 15px;
+        display: none;
+        border: 1px solid #3a3a3a;
+    }
+
+    .results h3 {
+        color: #ffffff;
+        margin-bottom: 15px;
+    }
+
+    .result-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px;
+        border-bottom: 1px solid #3a3a3a;
+    }
+
+    .result-item:last-child {
+        border-bottom: none;
+    }
+
+    .result-label {
+        font-weight: 500;
+        color: #cccccc;
+    }
+
+    .result-value {
+        color: #ffffff;
+        font-weight: 600;
+    }
+
+    .instructions {
+        background: #2d2d2d;
+        border: 2px solid #4a4a4a;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+
+    .instructions h4 {
+        color: #ffffff;
+        margin-bottom: 10px;
+    }
+
+    .instructions ol {
+        margin-left: 20px;
+        color: #cccccc;
+    }
+
+    .instructions li {
+        margin-bottom: 5px;
+    }
+
+    .point-info {
+        background: #2d2d2d;
+        border: 2px solid #4a4a4a;
+        border-radius: 8px;
+        padding: 15px;
+        color: #cccccc;
+    }
+
+    .point-info.complete {
+        background: #2d2d2d;
+        border-color: #666666;
+        color: #ffffff;
+    }
+
+    @media (max-width: 1024px) {
+        .main-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Real World Dimension Calculator</h1>
+
+  <div class="upload-area" onclick="document.getElementById('imageInput').click()">
+    <input type="file" id="imageInput" accept="image/*">
+    <h3>Click to Upload Image</h3>
+    <p>or drag and drop here</p>
+  </div>
+
+  <div class="main-grid">
+    <div class="image-section">
+      <div class="canvas-container" id="canvasContainer" style="display: none;">
+        <canvas id="imageCanvas"></canvas>
+      </div>
+    </div>
+
+    <div class="controls-section">
+      <div class="point-info" id="pointInfo">
+        <strong>Point Selection:</strong><br>
+        Click on the image to select two points
+      </div>
+
+      <div class="control-group">
+        <h3>Camera Calibration</h3>
+        <label>Focal Length X (fx) - pixels:</label>
+        <input type="number" id="fx" value="3445.38189" step="0.1">
+
+        <label>Focal Length Y (fy) - pixels:</label>
+        <input type="number" id="fy" value="3434.11813" step="0.1">
+
+        <label>Principal Point X (cx) - pixels:</label>
+        <input type="number" id="cx" value="1933.97419" step="0.1">
+
+        <label>Principal Point Y (cy) - pixels:</label>
+        <input type="number" id="cy" value="1811.38194" step="0.1">
+
+        <button class="btn-secondary" onclick="document.getElementById('calibInput').click()">
+          Load Calibration JSON
+        </button>
+        <input type="file" id="calibInput" accept=".json" style="display: none;">
+      </div>
+
+      <div class="control-group">
+        <h3>Depth Parameter</h3>
+        <label>Depth Z (mm) - Distance from camera to object:</label>
+        <input type="number" id="Z" value="300" step="1">
+      </div>
+
+      <button id="calculateBtn" disabled onclick="calculateDimensions()">
+        Calculate Dimensions
+      </button>
+
+      <button class="btn-secondary" onclick="resetPoints()">
+        Reset Points
+      </button>
+
+      <div class="results" id="results">
+        <h3>Results</h3>
+        <div id="resultsContent"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let canvas, ctx;
+  let imageLoaded = false;
+  let points = [];
+  let originalImage = null;
+
+  // Initialize
+  document.getElementById('imageInput').addEventListener('change', uploadImage);
+  document.getElementById('calibInput').addEventListener('change', loadCalibration);
+
+  function uploadImage() {
+      const fileInput = document.getElementById('imageInput');
+      const file = fileInput.files[0];
+
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append('image', file);
+
+      fetch('/upload_image', {
+          method: 'POST',
+          body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+          if (data.success) {
+              // Set up canvas
+              canvas = document.getElementById('imageCanvas');
+              ctx = canvas.getContext('2d');
+
+              // Load image
+              const img = new Image();
+              img.onload = function() {
+                  canvas.width = img.width;
+                  canvas.height = img.height;
+                  ctx.drawImage(img, 0, 0);
+                  originalImage = img;
+                  imageLoaded = true;
+                  points = [];
+
+                  // Update principal point defaults
+                  document.getElementById('cx').value = img.width / 2;
+                  document.getElementById('cy').value = img.height / 2;
+
+                  document.getElementById('canvasContainer').style.display = 'inline-block';
+                  updatePointInfo();
+              };
+              img.src = data.image_data;
+          } else {
+              alert('Error: ' + data.error);
+          }
+      })
+      .catch(error => {
+          alert('Upload failed: ' + error);
+      });
+  }
+
+  // Handle canvas clicks
+  document.addEventListener('DOMContentLoaded', function() {
+      const canvasElement = document.getElementById('imageCanvas');
+      canvasElement.addEventListener('click', handleCanvasClick);
+  });
+
+  function handleCanvasClick(event) {
+      if (!imageLoaded) return;
+      if (points.length >= 2) return;
+
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const x = Math.round((event.clientX - rect.left) * scaleX);
+      const y = Math.round((event.clientY - rect.top) * scaleY);
+
+      points.push({x, y});
+      drawPoints();
+      updatePointInfo();
+
+      if (points.length === 2) {
+          document.getElementById('calculateBtn').disabled = false;
+      }
+  }
+
+  function drawPoints() {
+      // Redraw original image
+      ctx.drawImage(originalImage, 0, 0);
+
+      // Draw points
+      points.forEach((point, index) => {
+          ctx.fillStyle = 'red';
+          ctx.beginPath();
+          ctx.arc(point.x, point.y, 6, 0, 2 * Math.PI);
+          ctx.fill();
+
+          ctx.fillStyle = 'red';
+          ctx.font = 'bold 16px Arial';
+          ctx.fillText(`P${index + 1}`, point.x - 20, point.y - 10);
+      });
+
+      // Draw rectangle if both points selected
+      if (points.length === 2) {
+          ctx.strokeStyle = 'lime';
+          ctx.lineWidth = 3;
+          ctx.strokeRect(
+              points[0].x,
+              points[0].y,
+              points[1].x - points[0].x,
+              points[1].y - points[0].y
+          );
+      }
+  }
+
+  function updatePointInfo() {
+      const infoDiv = document.getElementById('pointInfo');
+      if (points.length === 0) {
+          infoDiv.innerHTML = '<strong>Point Selection:</strong><br>Click on the image to select Point 1 (top-left)';
+          infoDiv.className = 'point-info';
+      } else if (points.length === 1) {
+          infoDiv.innerHTML = `<strong>Point 1 Selected:</strong> (${points[0].x}, ${points[0].y})<br>Click to select Point 2 (bottom-right)`;
+          infoDiv.className = 'point-info';
+      } else {
+          infoDiv.innerHTML = `<strong>Both Points Selected!</strong><br>P1: (${points[0].x}, ${points[0].y})<br>P2: (${points[1].x}, ${points[1].y})`;
+          infoDiv.className = 'point-info complete';
+      }
+  }
+
+  function resetPoints() {
+      points = [];
+      if (imageLoaded) {
+          ctx.drawImage(originalImage, 0, 0);
+      }
+      updatePointInfo();
+      document.getElementById('calculateBtn').disabled = true;
+      document.getElementById('results').style.display = 'none';
+  }
+
+  function calculateDimensions() {
+      if (points.length !== 2) {
+          alert('Please select two points first!');
+          return;
+      }
+
+      const data = {
+          x1: points[0].x,
+          y1: points[0].y,
+          x2: points[1].x,
+          y2: points[1].y,
+          fx: parseFloat(document.getElementById('fx').value),
+          fy: parseFloat(document.getElementById('fy').value),
+          cx: parseFloat(document.getElementById('cx').value),
+          cy: parseFloat(document.getElementById('cy').value),
+          Z: parseFloat(document.getElementById('Z').value)
+      };
+
+      fetch('/calculate_dimensions', {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(data)
+      })
+      .then(response => response.json())
+      .then(result => {
+          if (result.success) {
+              displayResults(result.dimensions);
+
+              // Show annotated image
+              if (result.annotated_image) {
+                  const img = new Image();
+                  img.onload = function() {
+                      ctx.drawImage(img, 0, 0);
+                  };
+                  img.src = result.annotated_image;
+              }
+          } else {
+              alert('Calculation error: ' + result.error);
+          }
+      })
+      .catch(error => {
+          alert('Calculation failed: ' + error);
+      });
+  }
+
+  function displayResults(dims) {
+      const resultsDiv = document.getElementById('results');
+      const contentDiv = document.getElementById('resultsContent');
+
+      const html = `
+          <div class="result-item">
+              <span class="result-label">Width:</span>
+              <span class="result-value">${dims.width_mm} mm / ${dims.width_cm} cm / ${dims.width_inch} in</span>
+          </div>
+          <div class="result-item">
+              <span class="result-label">Height:</span>
+              <span class="result-value">${dims.height_mm} mm / ${dims.height_cm} cm / ${dims.height_inch} in</span>
+          </div>
+          <div class="result-item">
+              <span class="result-label">Diagonal:</span>
+              <span class="result-value">${dims.diagonal_mm} mm / ${dims.diagonal_cm} cm / ${dims.diagonal_inch} in</span>
+          </div>
+          <div class="result-item">
+              <span class="result-label">Pixel Dimensions:</span>
+              <span class="result-value">${dims.pixel_width} × ${dims.pixel_height} px</span>
+          </div>
+      `;
+
+      contentDiv.innerHTML = html;
+      resultsDiv.style.display = 'block';
+  }
+
+  function loadCalibration() {
+      const fileInput = document.getElementById('calibInput');
+      const file = fileInput.files[0];
+
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append('calibration', file);
+
+      fetch('/load_calibration', {
+          method: 'POST',
+          body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+          if (data.success) {
+              document.getElementById('fx').value = data.fx;
+              document.getElementById('fy').value = data.fy;
+              document.getElementById('cx').value = data.cx;
+              document.getElementById('cy').value = data.cy;
+              alert('Calibration loaded successfully!');
+          } else {
+              alert('Error loading calibration: ' + data.error);
+          }
+      })
+      .catch(error => {
+          alert('Failed to load calibration: ' + error);
+      });
+  }
+</script>
+</body>
+</html>
