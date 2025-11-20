@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Template Matching - Batch Processing</title>
+  <style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+        background: #000000;
+        color: #ffffff;
+        padding: 20px;
+    }
+
+    .container {
+        max-width: 1600px;
+        margin: 0 auto;
+    }
+
+    header {
+        text-align: center;
+        margin-bottom: 30px;
+        padding: 20px;
+        background: #1a1a1a;
+        border-radius: 12px;
+        border: 2px solid #ffffff;
+    }
+
+    h1 {
+        font-size: 2.5em;
+        margin-bottom: 10px;
+    }
+
+    .subtitle {
+        color: #cccccc;
+        font-size: 1.1em;
+    }
+
+    .grid {
+        display: grid;
+        grid-template-columns: 400px 1fr;
+        gap: 20px;
+    }
+
+    .panel {
+        background: #0d0d0d;
+        border: 2px solid #ffffff;
+        border-radius: 12px;
+        padding: 20px;
+    }
+
+    .panel h2 {
+        border-bottom: 2px solid #ffffff;
+        padding-bottom: 10px;
+        margin-bottom: 15px;
+    }
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    label {
+        display: block;
+        color: #cccccc;
+        margin-bottom: 5px;
+        font-size: 0.9em;
+    }
+
+    input[type="file"],
+    select {
+        width: 100%;
+        padding: 10px;
+        background: #000000;
+        border: 2px solid #444444;
+        border-radius: 8px;
+        color: #ffffff;
+    }
+
+    input[type="file"] {
+        padding: 8px;
+        cursor: pointer;
+    }
+
+    button {
+        width: 100%;
+        padding: 12px;
+        background: #ffffff;
+        color: #000000;
+        border: 2px solid #ffffff;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        margin-bottom: 10px;
+    }
+
+    button:hover {
+        background: #000000;
+        color: #ffffff;
+    }
+
+    button:disabled {
+        background: #333333;
+        color: #666666;
+        border-color: #333333;
+        cursor: not-allowed;
+    }
+
+    .image-preview {
+        width: 100%;
+        max-height: 250px;
+        border: 2px solid #444444;
+        border-radius: 8px;
+        background: #000000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        margin-top: 10px;
+    }
+
+    .image-preview img {
+        max-width: 100%;
+        max-height: 100%;
+        display: block;
+    }
+
+    .template-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 10px;
+        margin-top: 15px;
+    }
+
+    .template-slot {
+        border: 2px solid #444444;
+        border-radius: 8px;
+        padding: 8px;
+        text-align: center;
+        min-height: 100px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .template-slot.uploaded {
+        border-color: #ffffff;
+    }
+
+    .template-slot img {
+        width: 100%;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 4px;
+        margin-bottom: 5px;
+    }
+
+    .template-number {
+        font-size: 0.8em;
+        color: #cccccc;
+    }
+
+    .empty-slot {
+        color: #444444;
+        font-size: 0.85em;
+    }
+
+    .alert {
+        padding: 12px;
+        border-radius: 8px;
+        margin-top: 10px;
+        border: 1px solid;
+    }
+
+    .alert-success {
+        background: #1a1a1a;
+        border-color: #ffffff;
+    }
+
+    .alert-error {
+        background: #1a1a1a;
+        border-color: #888888;
+        color: #cccccc;
+    }
+
+    .loading {
+        text-align: center;
+        padding: 20px;
+        display: none;
+    }
+
+    .loading.active {
+        display: block;
+    }
+
+    .result-card {
+        background: #0d0d0d;
+        border: 2px solid #444444;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .result-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #444444;
+    }
+
+    .result-images {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+        margin-top: 15px;
+    }
+
+    .result-image-container {
+        border: 2px solid #444444;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .result-image-container img {
+        width: 100%;
+        display: block;
+    }
+
+    .result-image-label {
+        background: #1a1a1a;
+        padding: 8px;
+        text-align: center;
+        font-size: 0.85em;
+        border-top: 1px solid #444444;
+    }
+
+    .stats-inline {
+        display: flex;
+        gap: 15px;
+        margin-top: 10px;
+        font-size: 0.9em;
+    }
+
+    .stat {
+        color: #cccccc;
+    }
+
+    .stat strong {
+        color: #ffffff;
+    }
+
+    .summary-panel {
+        background: #1a1a1a;
+        border: 2px solid #ffffff;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 15px;
+        margin-top: 15px;
+    }
+
+    .summary-box {
+        background: #000000;
+        border: 1px solid #444444;
+        border-radius: 8px;
+        padding: 15px;
+        text-align: center;
+    }
+
+    .summary-label {
+        font-size: 0.85em;
+        color: #888888;
+        margin-bottom: 5px;
+    }
+
+    .summary-value {
+        font-size: 2em;
+        font-weight: bold;
+    }
+
+    @media (max-width: 1200px) {
+        .grid {
+            grid-template-columns: 1fr;
+        }
+
+        .template-grid {
+            grid-template-columns: repeat(5, 1fr);
+        }
+
+        .result-images {
+            grid-template-columns: 1fr;
+        }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>Template Matching - Batch Processing</h1>
+    <p class="subtitle">Upload 1 source image with all objects and 10 template images from different scenes</p>
+  </header>
+
+  <div class="grid">
+    <!-- Left Panel: Upload Controls -->
+    <div class="panel">
+      <h2>Step 1: Upload Source Image</h2>
+
+      <div class="form-group">
+        <label>Source Image (contains all 10 objects)</label>
+        <input type="file" id="sourceFile" accept="image/*,.jpg,.JPG,.jpeg,.JPEG,.png,.PNG">
+        <button id="uploadSourceBtn">Upload Source</button>
+      </div>
+
+      <div class="image-preview" id="sourcePreview">
+        <span style="color: #666;">Source image preview</span>
+      </div>
+
+      <div id="sourceStatus"></div>
+
+      <!-- Template Upload -->
+      <div style="margin-top: 30px;">
+        <h2>Step 2: Upload 10 Templates</h2>
+        <p style="color: #888; font-size: 0.85em; margin-bottom: 10px;">
+          Templates must be from DIFFERENT scenes (not cropped from source)
+        </p>
+
+        <div class="form-group">
+          <label>Upload All 10 Templates at Once</label>
+          <input type="file" id="templateFilesMultiple" accept="image/*,.jpg,.JPG,.jpeg,.JPEG,.png,.PNG" multiple>
+          <button id="uploadAllTemplatesBtn">Upload All Templates</button>
+          <p style="color: #666; font-size: 0.8em; margin-top: 5px;">
+            Tip: Select 10 images (Ctrl/Cmd + Click) - Accepts .jpg, .JPG, .jpeg, .png
+          </p>
+        </div>
+
+        <div style="text-align: center; color: #666; margin: 15px 0;">OR</div>
+
+        <div class="form-group">
+          <label>Upload One by One (Current: <span id="currentTemplate">1</span>/10)</label>
+          <input type="file" id="templateFile" accept="image/*,.jpg,.JPG,.jpeg,.JPEG,.png,.PNG">
+          <button id="uploadTemplateBtn">Upload Template <span id="uploadBtnNumber">1</span></button>
+        </div>
+
+        <div class="template-grid" id="templateGrid"></div>
+
+        <div id="templateStatus"></div>
+      </div>
+
+      <!-- Processing Controls -->
+      <div style="margin-top: 30px;">
+        <h2>⚙️ Step 3: Process All Templates</h2>
+
+        <div class="form-group">
+          <label>
+            Detection Threshold: <span id="thresholdValue">0.60</span>
+          </label>
+          <input type="range" id="thresholdSlider" min="0.3" max="0.9" step="0.05" value="0.60"
+                 style="width: 100%; padding: 0;">
+          <p style="color: #666; font-size: 0.8em; margin-top: 5px;">
+            Lower (0.3-0.5) = more detections, may have false positives<br>
+            Medium (0.5-0.7) = balanced detection<br>
+            Higher (0.7-0.9) = fewer detections, more accurate
+          </p>
+        </div>
+
+        <button id="processAllBtn" disabled style="background: #000; color: #fff; border-color: #fff; font-size: 1.1em;">
+          Detect Objects in Source Image
+        </button>
+
+        <p style="color: #888; font-size: 0.85em; margin-top: 10px;">
+          ✓ Auto-resizes large images for fast processing<br>
+          ✓ Tests 8 scales with 2 correlation methods<br>
+          ✓ Processing time: ~15-30 seconds for 10 templates<br>
+          ✓ Works with high-resolution phone photos
+        </p>
+      </div>
+    </div>
+
+    <!-- Right Panel: Results -->
+    <div>
+      <div class="loading" id="loading">
+        <h2>Processing...</h2>
+        <p style="color: #888; margin-top: 10px;">This may take a few moments</p>
+      </div>
+
+      <div id="resultsContainer">
+        <div class="panel">
+          <h2>Results</h2>
+          <p style="color: #666; text-align: center; padding: 40px;">
+            Upload source image and templates, then click "Process All Templates" to see detection results
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // State
+  let sourceUploaded = false;
+  let currentTemplateId = 1;
+  let uploadedTemplates = new Set();
+
+  // Initialize template grid
+  const templateGrid = document.getElementById('templateGrid');
+  for (let i = 1; i <= 10; i++) {
+      const slot = document.createElement('div');
+      slot.className = 'template-slot';
+      slot.id = `template-slot-${i}`;
+      slot.innerHTML = `<span class="empty-slot">Empty</span><div class="template-number">T${i}</div>`;
+      templateGrid.appendChild(slot);
+  }
+
+  // Threshold slider
+  document.getElementById('thresholdSlider').addEventListener('input', (e) => {
+      document.getElementById('thresholdValue').textContent = parseFloat(e.target.value).toFixed(2);
+  });
+
+  // Upload Source
+  document.getElementById('uploadSourceBtn').addEventListener('click', async () => {
+      const fileInput = document.getElementById('sourceFile');
+      const file = fileInput.files[0];
+
+      if (!file) {
+          alert('Please select a source image!');
+          return;
+      }
+
+      const formData = new FormData();
+      formData.append('source', file);
+
+      try {
+          const response = await fetch('/upload_source', {
+              method: 'POST',
+              body: formData
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+              sourceUploaded = true;
+              document.getElementById('sourcePreview').innerHTML =
+                  `<img src="${data.image}" alt="Source">`;
+              document.getElementById('sourceStatus').innerHTML =
+                  `<div class="alert alert-success">✓ Source uploaded: ${data.width}×${data.height}px</div>`;
+
+              updateProcessButton();
+          } else {
+              throw new Error(data.error);
+          }
+      } catch (error) {
+          document.getElementById('sourceStatus').innerHTML =
+              `<div class="alert alert-error">Error: ${error.message}</div>`;
+      }
+  });
+
+  // Upload All Templates at Once
+  document.getElementById('uploadAllTemplatesBtn').addEventListener('click', async () => {
+      const fileInput = document.getElementById('templateFilesMultiple');
+      const files = fileInput.files;
+
+      if (files.length === 0) {
+          alert('Please select template images!');
+          return;
+      }
+
+      if (files.length > 10) {
+          alert('Please select maximum 10 template images!');
+          return;
+      }
+
+      document.getElementById('templateStatus').innerHTML =
+          `<div class="alert alert-success">Uploading ${files.length} templates...</div>`;
+
+      let successCount = 0;
+      let errorCount = 0;
+
+      // Upload each file
+      for (let i = 0; i < files.length && i < 10; i++) {
+          const file = files[i];
+          const templateId = i + 1;
+
+          const formData = new FormData();
+          formData.append('template', file);
+          formData.append('template_id', templateId);
+
+          try {
+              const response = await fetch('/upload_template', {
+                  method: 'POST',
+                  body: formData
+              });
+
+              const data = await response.json();
+
+              if (data.success) {
+                  uploadedTemplates.add(templateId);
+
+                  // Update template slot
+                  const slot = document.getElementById(`template-slot-${templateId}`);
+                  slot.className = 'template-slot uploaded';
+                  slot.innerHTML = `<img src="${data.image}" alt="T${templateId}"><div class="template-number">T${templateId} ✓</div>`;
+
+                  successCount++;
+              } else {
+                  errorCount++;
+                  console.error(`Failed to upload template ${templateId}:`, data.error);
+              }
+          } catch (error) {
+              errorCount++;
+              console.error(`Error uploading template ${templateId}:`, error);
+          }
+
+          // Update progress
+          document.getElementById('templateStatus').innerHTML =
+              `<div class="alert alert-success">Uploading... ${i + 1}/${files.length}</div>`;
+      }
+
+      // Final status
+      if (errorCount === 0) {
+          document.getElementById('templateStatus').innerHTML =
+              `<div class="alert alert-success">✓ Successfully uploaded ${successCount} templates!</div>`;
+      } else {
+          document.getElementById('templateStatus').innerHTML =
+              `<div class="alert alert-error">⚠️ Uploaded ${successCount} templates, ${errorCount} failed</div>`;
+      }
+
+      // Update current template counter
+      currentTemplateId = uploadedTemplates.size < 10 ? uploadedTemplates.size + 1 : 10;
+      document.getElementById('currentTemplate').textContent = currentTemplateId;
+      document.getElementById('uploadBtnNumber').textContent = currentTemplateId;
+
+      // Clear file input
+      fileInput.value = '';
+
+      updateProcessButton();
+  });
+
+  // Upload Template (One by One)
+  document.getElementById('uploadTemplateBtn').addEventListener('click', async () => {
+      const fileInput = document.getElementById('templateFile');
+      const file = fileInput.files[0];
+
+      if (!file) {
+          alert('Please select a template image!');
+          return;
+      }
+
+      const formData = new FormData();
+      formData.append('template', file);
+      formData.append('template_id', currentTemplateId);
+
+      try {
+          const response = await fetch('/upload_template', {
+              method: 'POST',
+              body: formData
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+              uploadedTemplates.add(currentTemplateId);
+
+              // Update template slot
+              const slot = document.getElementById(`template-slot-${currentTemplateId}`);
+              slot.className = 'template-slot uploaded';
+              slot.innerHTML = `<img src="${data.image}" alt="T${currentTemplateId}"><div class="template-number">T${currentTemplateId} ✓</div>`;
+
+              document.getElementById('templateStatus').innerHTML =
+                  `<div class="alert alert-success">✓ Template ${currentTemplateId} uploaded (${uploadedTemplates.size}/10)</div>`;
+
+              // Move to next template
+              if (currentTemplateId < 10) {
+                  currentTemplateId++;
+                  document.getElementById('currentTemplate').textContent = currentTemplateId;
+                  document.getElementById('uploadBtnNumber').textContent = currentTemplateId;
+              }
+
+              // Clear file input
+              fileInput.value = '';
+
+              updateProcessButton();
+          } else {
+              throw new Error(data.error);
+          }
+      } catch (error) {
+          document.getElementById('templateStatus').innerHTML =
+              `<div class="alert alert-error">Error: ${error.message}</div>`;
+      }
+  });
+
+  // Process All Templates
+  document.getElementById('processAllBtn').addEventListener('click', async () => {
+      const threshold = parseFloat(document.getElementById('thresholdSlider').value);
+
+      console.log('Processing started...', { threshold });
+
+      try {
+          document.getElementById('loading').classList.add('active');
+          document.getElementById('resultsContainer').innerHTML = `
+              <div class="panel">
+                  <h2>⏳ Processing...</h2>
+                  <p style="color: #cccccc; padding: 20px;">Detecting objects in source image using all templates. This may take 30-60 seconds...</p>
+              </div>
+          `;
+
+          console.log('Sending request to /process_all');
+
+          // Use AbortController for timeout
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 120000); // 2 minute timeout
+
+          const response = await fetch('/process_all', {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({ threshold }),
+              signal: controller.signal
+          });
+
+          clearTimeout(timeoutId);
+
+          console.log('Response status:', response.status);
+
+          if (!response.ok) {
+              const errorText = await response.text();
+              throw new Error(`Server error (${response.status}): ${errorText}`);
+          }
+
+          const data = await response.json();
+          console.log('Response received:', data);
+
+          if (data.success) {
+              console.log('Displaying results...');
+              displayResults(data);
+          } else {
+              throw new Error(data.error || 'Unknown error occurred');
+          }
+      } catch (error) {
+          console.error('Processing error:', error);
+
+          let errorMessage = error.message;
+          if (error.name === 'AbortError') {
+              errorMessage = 'Request timeout - processing took too long. Try with fewer templates or smaller images.';
+          } else if (error.message.includes('Failed to fetch')) {
+              errorMessage = 'Cannot connect to server. Please check:\n1. Flask server is running\n2. Check terminal for errors\n3. Try restarting the server';
+          }
+
+          document.getElementById('resultsContainer').innerHTML = `
+              <div class="panel">
+                  <h2 style="color: #ff4444;">Error</h2>
+                  <p style="color: #cccccc; padding: 20px; white-space: pre-wrap;">${errorMessage}</p>
+                  <div style="background: #1a1a1a; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                      <strong>Troubleshooting:</strong><br>
+                      1. Check Flask terminal for error messages<br>
+                      2. Open browser console (F12) for details<br>
+                      3. Make sure source and templates are uploaded<br>
+                      4. Try lower resolution images if they're very large
+                  </div>
+              </div>
+          `;
+      } finally {
+          document.getElementById('loading').classList.remove('active');
+      }
+  });
+
+  function displayResults(data) {
+      const container = document.getElementById('resultsContainer');
+
+      // Summary Panel
+      let html = `
+          <div class="summary-panel">
+              <h2>📈 Overall Summary</h2>
+              <div class="summary-grid">
+                  <div class="summary-box">
+                      <div class="summary-label">Total Templates</div>
+                      <div class="summary-value">${data.total_templates}</div>
+                  </div>
+                  <div class="summary-box">
+                      <div class="summary-label">Total Matches</div>
+                      <div class="summary-value">${data.total_matches}</div>
+                  </div>
+                  <div class="summary-box">
+                      <div class="summary-label">Method</div>
+                      <div class="summary-value" style="font-size: 1.2em;">${data.method}</div>
+                  </div>
+                  <div class="summary-box">
+                      <div class="summary-label">Threshold</div>
+                      <div class="summary-value">${data.threshold.toFixed(2)}</div>
+                  </div>
+              </div>
+          </div>
+      `;
+
+      // Individual Results
+      data.results.forEach((result, index) => {
+          html += `
+              <div class="result-card">
+                  <div class="result-header">
+                      <h3>Template ${result.template_id}: ${result.template_name}</h3>
+                      <span style="font-size: 1.2em; font-weight: bold;">
+                          ${result.num_matches} Match${result.num_matches !== 1 ? 'es' : ''}
+                      </span>
+                  </div>
+
+                  <div class="stats-inline">
+                      <div class="stat"><strong>Max Correlation:</strong> ${result.max_correlation.toFixed(4)}</div>
+                      <div class="stat"><strong>Mean Correlation:</strong> ${result.mean_correlation.toFixed(4)}</div>
+                      <div class="stat"><strong>Min Correlation:</strong> ${result.min_correlation.toFixed(4)}</div>
+                  </div>
+
+                  <div class="result-images">
+                      <div class="result-image-container">
+                          <img src="${result.template_image}" alt="Template">
+                          <div class="result-image-label">Template Image</div>
+                      </div>
+                      <div class="result-image-container">
+                          <img src="${result.result_image}" alt="Detection">
+                          <div class="result-image-label">Detection Result (${result.num_matches} matches found)</div>
+                      </div>
+                      <div class="result-image-container">
+                          <img src="${result.heatmap_image}" alt="Heatmap">
+                          <div class="result-image-label">Correlation Heatmap</div>
+                      </div>
+                  </div>
+              </div>
+          `;
+      });
+
+      container.innerHTML = html;
+
+      // Scroll to results
+      container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function updateProcessButton() {
+      const btn = document.getElementById('processAllBtn');
+      const canProcess = sourceUploaded && uploadedTemplates.size > 0;
+      btn.disabled = !canProcess;
+
+      console.log('Button state:', {
+          sourceUploaded,
+          templatesCount: uploadedTemplates.size,
+          canProcess,
+          disabled: btn.disabled
+      });
+  }
+</script>
+</body>
+</html>
