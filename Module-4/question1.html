@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Module 4 – Image Stitching & Panorama Comparison</title>
+    <style>
+        body {
+            background-color: #000;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            margin: 0;
+            padding: 40px 16px;
+            text-align: center;
+        }
+
+        .wrap {
+            background: #111;
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 1200px;
+            margin: 0 auto;
+            box-shadow: 0 0 30px rgba(255,255,255,0.08);
+        }
+
+        h1 {
+            margin-top: 0;
+            margin-bottom: 8px;
+        }
+
+        p.sub {
+            color: #ccc;
+            margin-top: 0;
+            margin-bottom: 24px;
+        }
+
+        form {
+            margin-bottom: 28px;
+        }
+
+        input[type="file"] {
+            background: #222;
+            color: #ddd;
+            border: 1px solid #555;
+            border-radius: 8px;
+            padding: 10px;
+            margin: 6px 0;
+        }
+
+        input[type="submit"] {
+            background: #fff;
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 18px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.25s ease;
+        }
+
+        input[type="submit"]:hover {
+            background: #ddd;
+        }
+
+        .err {
+            color: #ff7777;
+            margin-top: 10px;
+        }
+
+        .grid {
+            display: grid;
+            gap: 16px;
+            grid-template-columns: repeat(4, 1fr);
+            justify-items: center;
+            margin-top: 24px;
+        }
+
+        .card {
+            background: #1a1a1a;
+            border-radius: 10px;
+            padding: 10px;
+            width: 100%;
+            max-width: 260px;
+            box-shadow: 0 0 10px rgba(255,255,255,0.05);
+            text-align: center;
+        }
+
+        img {
+            width: 100%;
+            max-width: 260px;
+            border-radius: 8px;
+            border: 2px solid #444;
+            background: #000;
+            transition: 0.25s ease;
+        }
+
+        img:hover {
+            transform: scale(1.03);
+            border-color: #888;
+        }
+
+        .cap {
+            color: #bbb;
+            margin-top: 6px;
+            font-size: 0.9em;
+        }
+
+        .section-title {
+            margin-top: 32px;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        @media (max-width: 900px) {
+            .grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 600px) {
+            .grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <h1>Module 4 – Image Stitching</h1>
+    <p class="sub">
+        Upload at least 4 overlapping images of a scene. The app will stitch them into a panorama.
+        Optionally, upload your phone's panorama for comparison.
+    </p>
+
+    {% if error %}
+        <div class="err">{{ error }}</div>
+    {% endif %}
+
+    <form method="POST" enctype="multipart/form-data">
+        <div>
+            <strong>Step 1:</strong> Upload your dataset images (≥ 4, same scene)<br>
+            <input type="file" name="images" accept="image/*" multiple required />
+        </div>
+
+        <div style="margin-top: 12px;">
+            <strong>Step 2 (optional):</strong> Upload phone panorama of the same scene<br>
+            <input type="file" name="phone_pano" accept="image/*" />
+        </div>
+
+        <input type="submit" value="Stitch Images" />
+    </form>
+
+    {% if input_images %}
+    <h2 class="section-title">Input Images</h2>
+    <div class="grid">
+        {% for img_url in input_images %}
+        <div class="card">
+            <img src="{{ img_url }}" alt="input">
+            <div class="cap">Input view</div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if stitched_url or phone_pano_url %}
+    <h2 class="section-title">Panorama Results</h2>
+    <div class="grid">
+        {% if stitched_url %}
+        <div class="card">
+            <img src="{{ stitched_url }}" alt="Stitched panorama">
+            <div class="cap">Panorama stitched by your Module-4 code</div>
+        </div>
+        {% endif %}
+
+        {% if phone_pano_url %}
+        <div class="card">
+            <img src="{{ phone_pano_url }}" alt="Phone panorama">
+            <div class="cap">Phone camera panorama (for comparison)</div>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+</body>
+</html>
